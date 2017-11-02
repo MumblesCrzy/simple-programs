@@ -1,0 +1,1 @@
+src/bin_program2-program2.o: src/program2.cpp
