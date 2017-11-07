@@ -9,3 +9,5 @@ configure
 libtool
 config/
 .deps/
+bin
+.dirstamp
