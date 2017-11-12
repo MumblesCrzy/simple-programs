@@ -30,12 +30,15 @@ int main(int argc, char const* argv[])
 	    printf("Using map file %s\n", files[i].c_str());
 
 	    MazeTurner turner(files[i]);
-	    bool foundExit = false;
-	    while(!foundExit)
+	    int turnerReport = 0;
+	    while(turnerReport == 0)
 	    {
-	    	foundExit = turner.NavigateMap();
+	    	turnerReport = turner.NavigateMap();
 	    }
-	    printf("I did it!\n");
+	    if (turnerReport == 1)
+		    printf("I did it!\n");
+		else
+			printf("It's impossible\n");
 	}
 	
 	return 0;

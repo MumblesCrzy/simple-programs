@@ -19,6 +19,13 @@ enum MAP_MARKER
 	EXIT
 };
 
+enum STATUS
+{
+	IMPOSSIBLE = -1,
+	MOVING,
+	DONE
+};
+
 struct Coordinates
 {
 	unsigned int x;
@@ -32,15 +39,17 @@ class MazeTurner
 public:
 	MazeTurner(std::string fileName);
 	void GetMap();
-	bool NavigateMap();
+	int NavigateMap();
 private:
 	std::string PrintDirection(const Coordinates& coord);
-	bool TravelEast(unsigned int &move);
-	bool TravelWest(unsigned int &move);
-	bool TravelNorth(unsigned int &move);
-	bool TravelSouth(unsigned int &move);
+	void TurnAround();
+	int TravelEast(unsigned int &move);
+	int TravelWest(unsigned int &move);
+	int TravelNorth(unsigned int &move);
+	int TravelSouth(unsigned int &move);
 	int CheckMove(int x, int y);
 
+	int mSameDirection;
 	Coordinates mMapSize;
 	Coordinates mStartingPoint;
 	Coordinates mTurnerLocation;

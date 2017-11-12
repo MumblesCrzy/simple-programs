@@ -7,6 +7,7 @@
 
 MazeTurner::MazeTurner(std::string fileName) : mMyMap(fileName)
 {
+	mSameDirection = 0;
 	GetMap();
 }
 
@@ -67,6 +68,7 @@ void MazeTurner::GetMap()
 		    	{
 		    		mStartingPoint.x = j;
 					mStartingPoint.y = i;
+					std::cout << "My starting point is " << mStartingPoint.x+1 << ":" << mStartingPoint.y+1 << "\n";
 		    	}
 		    }
 	    	// std::cout << mMap[j][i];
@@ -101,36 +103,86 @@ std::string MazeTurner::PrintDirection(const Coordinates& coord)
 	return directionStr;
 }
 
-bool MazeTurner::NavigateMap()
+int MazeTurner::NavigateMap()
 {
-	bool done = false;
+	int status = MOVING;
 	unsigned int move = MOVE;
-	// std::cout << "My current location is " << mTurnerLocation.x << ":" 
-		// << mTurnerLocation.y << " and my direction is " << mTurnerLocation.direction << "\n";
+	// std::cout << "My current location is " << mTurnerLocation.x+1 << ":" 
+		// << mTurnerLocation+1.y << " and my direction is " << mTurnerLocation.direction << "\n";
 	sleep(1);
+	while(move >= 0 && status == MOVING)
+	{
+		switch(mTurnerLocation.direction)
+		{
+			case EAST:
+			{
+				status = TravelEast(move);
+				break;
+			}
+			case WEST:
+			{
+				status = TravelWest(move);
+				break;
+			}
+			case NORTH:
+			{
+				status = TravelNorth(move);
+				break;
+			}
+			case SOUTH:
+			{
+				status = TravelSouth(move);
+				break;
+			}
+		}
+	}
+	// 	std::cout << "My current location is " << mTurnerLocation.x+1 << ":" 
+		// << mTurnerLocation.y+1 << " I have " << move << " moves left\n";
+	// if (mSameDirection >= MOVE)
+	std::cout << "I'm done? " << (status == DONE ? "yes" : "no") << "\n";
+	if (status == MOVING)
+	{
+		if(mTurnerLocation.x == mStartingPoint.x &&
+			mTurnerLocation.y == mStartingPoint.y)
+		{
+			status = IMPOSSIBLE;
+		}
+		TurnAround();
+	}
+	else
+		status = DONE;
+
+	return status;
+}
+
+void MazeTurner::TurnAround()
+{
+	std::cout << "I'm turning around\n";
 	switch(mTurnerLocation.direction)
 	{
 		case EAST:
-			done = TravelEast(move);
+			mTurnerLocation.direction = WEST;
 			break;
 		case WEST:
-			done = TravelWest(move);
+			mTurnerLocation.direction = EAST;
 			break;
 		case NORTH:
-			done = TravelNorth(move);
+			mTurnerLocation.direction = SOUTH;
 			break;
 		case SOUTH:
-			done = TravelSouth(move);
+			mTurnerLocation.direction = NORTH;
 			break;
 	}
 }
 
-bool MazeTurner::TravelEast(unsigned int &move)
+int MazeTurner::TravelEast(unsigned int &move)
 {
+	std::cout << "My current location is " << mTurnerLocation.x+1 << ":" 
+		<< mTurnerLocation.y+1 << " I have " << move << " moves left\n";
 	// std::cout << "Moving East\n";
 	mTurnerLocation.direction = EAST; 
-	bool done = false;
-	for (int i = 0; i < move; ++i)
+	int status = MOVING;
+	while(move > 0)
 	{
 		if(mTurnerLocation.x < mMapSize.x)
 		{
@@ -138,38 +190,46 @@ bool MazeTurner::TravelEast(unsigned int &move)
 			{
 				case SPACE:
 					++mTurnerLocation.x;
-					TravelEast(move);
+					++mSameDirection;
+					--move;
+					status = TravelEast(move);
 					break;
 				case WALL:
 					if (CheckMove(mTurnerLocation.x, mTurnerLocation.y+1))
 					{
-						TravelSouth(move);
+						mSameDirection = 0;
+						status = TravelSouth(move);
 					}
 					else if (CheckMove(mTurnerLocation.x, mTurnerLocation.y-1))
 					{
-						TravelNorth(move);
+						mSameDirection = 0;
+						status = TravelNorth(move);
 					}
 					else
 					{
-						TravelWest(move);
+						mSameDirection = 0;
+						status = TravelWest(move);
 					}
 					break;
 				case EXIT:
+					++mTurnerLocation.x;
 					move = 0;
-					done = true;
+					status = DONE;
 					break;
 			}
 		}
 	}
-	return done;
+	return status;
 }
 
-bool MazeTurner::TravelWest(unsigned int &move)
+int MazeTurner::TravelWest(unsigned int &move)
 {
+	std::cout << "My current location is " << mTurnerLocation.x+1 << ":" 
+		<< mTurnerLocation.y+1 << " I have " << move << " moves left\n";
 	// std::cout << "Moving West\n";
 	mTurnerLocation.direction = WEST; 
-	bool done = true;
-	for (int i = 0; i < move; ++i)
+	int status = MOVING;
+	while(move > 0)
 	{
 		if(mTurnerLocation.x > 0)
 		{
@@ -177,38 +237,45 @@ bool MazeTurner::TravelWest(unsigned int &move)
 			{
 				case SPACE:
 					--mTurnerLocation.x;
-					TravelWest(move);
+					++mSameDirection;
+					--move;
+					status = TravelWest(move);
 					break;
 				case WALL:
 					if (CheckMove(mTurnerLocation.x, mTurnerLocation.y-1))
 					{
-						TravelNorth(move);
+						mSameDirection = 0;
+						status = TravelNorth(move);
 					}
 					else if (CheckMove(mTurnerLocation.x, mTurnerLocation.y+1))
 					{
-						TravelSouth(move);
+						mSameDirection = 0;
+						status = TravelSouth(move);
 					}
 					else
 					{
-						TravelEast(move);
+						mSameDirection = 0;
+						status = TravelEast(move);
 					}
 					break;
 				case EXIT:
 					move = 0;
-					done = true;
+					status = DONE;
 					break;
 			}
 		}
 	}
-	return done;
+	return status;
 }
 
-bool MazeTurner::TravelNorth(unsigned int &move)
+int MazeTurner::TravelNorth(unsigned int &move)
 {
+		std::cout << "My current location is " << mTurnerLocation.x+1 << ":" 
+		<< mTurnerLocation.y+1 << " I have " << move << " moves left\n";
 	// std::cout << "Moving North\n";
 	mTurnerLocation.direction = NORTH; 
-	bool done = true;
-	for (int i = 0; i < move; ++i)
+	int status = MOVING;
+	while(move > 0)
 	{
 		if(mTurnerLocation.y > 0)
 		{
@@ -216,66 +283,79 @@ bool MazeTurner::TravelNorth(unsigned int &move)
 			{
 				case SPACE:
 					--mTurnerLocation.y;
-					TravelNorth(move);
+					++mSameDirection;
+					--move;
+					status = TravelNorth(move);
 					break;
 				case WALL:
 					if (CheckMove(mTurnerLocation.x+1, mTurnerLocation.y))
 					{
-						TravelEast(move);
+						mSameDirection = 0;
+						status = TravelEast(move);
 					}
 					else if (CheckMove(mTurnerLocation.x-1, mTurnerLocation.y))
 					{
-						TravelWest(move);
+						mSameDirection = 0;
+						status = TravelWest(move);
 					}
 					else
 					{
-						TravelSouth(move);
+						mSameDirection = 0;
+						status = TravelSouth(move);
 					}
 					break;
 				case EXIT:
 					move = 0;
-					done = true;
+					status = DONE;
 					break;
 			}
 		}
 	}
-	return done;
+	return status;
 }
 
-bool MazeTurner::TravelSouth(unsigned int &move)
+int MazeTurner::TravelSouth(unsigned int &move)
 {
+	std::cout << "My current location is " << mTurnerLocation.x+1 << ":" 
+		<< mTurnerLocation.y+1 << " I have " << move << " moves left\n";
 	// std::cout << "Moving South\n";
 	mTurnerLocation.direction = SOUTH; 
-	bool done = true;
-	for (int i = 0; i < move; ++i)
+	int status = MOVING;
+	while(move > 0)
 	{
 		switch(CheckMove(mTurnerLocation.x, mTurnerLocation.y+1))
 		{
 			case SPACE:
 				++mTurnerLocation.y;
-				TravelSouth(move);
+				++mSameDirection;
+				--move;
+				status = TravelSouth(move);
 				break;
 			case WALL:
 				if (CheckMove(mTurnerLocation.x-1, mTurnerLocation.y))
 				{
-					TravelWest(move);
+					mSameDirection = 0;
+					status = TravelWest(move);
 				}
 				else if (CheckMove(mTurnerLocation.x+1, mTurnerLocation.y))
 				{
-					TravelEast(move);
+					mSameDirection = 0;
+					status = TravelEast(move);
 				}
 				else
 				{
-					TravelNorth(move);
+					mSameDirection = 0;
+					status = TravelNorth(move);
 				}
 				break;
 			case EXIT:
 				move = 0;
-				done = true;
+				status = DONE;
+				std::cout << "I'm done? " << (status == DONE ? "yes" : "no") << "\n";
 				break;
 		}
 	}
-	return done;
+	return status;
 }
 
 int MazeTurner::CheckMove(int x, int y)
